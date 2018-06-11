@@ -32,6 +32,7 @@ To log the real ip of the client use
 
     LogFormat "%a -- %t %{ms}T %D %m %U %>s %b %I \"%{Referer}i\" \"%{User-Agent}i\"" custom
 where
+
     %a = real_ip_of_client
 
 ## Amazon EC2 Notes
