@@ -1,0 +1,38 @@
+stages:
+        - build
+        - deploy
+
+rpmbuild:
+        stage: build
+        image: gitlab-registry.cern.ch/cloud/ciadm
+        except:
+                - tags
+        script:
+                - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+                - export parser=(${CI_BUILD_TAG//-/ })
+                - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g mod_proxy_protocol.spec
+                - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g mod_proxy_protocol.spec
+                - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/rpmbuild.sh | bash
+
+kojicheck:
+        stage: build
+        image: gitlab-registry.cern.ch/cloud/ciadm
+        script:
+                - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+                - export parser=(${CI_BUILD_TAG//-/ })
+                - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g mod_proxy_protocol.spec
+                - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g mod_proxy_protocol.spec
+                - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojicheck.sh | bash
+
+kojibuild:
+        stage: deploy
+        image: gitlab-registry.cern.ch/cloud/ciadm
+        only:
+                - tags
+        script:
+                - export DIST='.el7.cern'
+                - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+                - export parser=(${CI_BUILD_TAG//-/ })
+                - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g mod_proxy_protocol.spec
+                - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g mod_proxy_protocol.spec
+                - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojibuild.sh | bash
